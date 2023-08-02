@@ -1,0 +1,71 @@
+[Header]	
+System	salt-9mL	
+S/W Version	1.00	
+User		
+Date/Time	7/28/2023 10:22:21 AM	
+
+[System]	
+Instrument Options	TOC/ASI/IC Unit/TN/Sparge Kit/	
+
+[Data]	
+Type	Anal.	Sample Name	Sample ID	Result(TOC)	Result(TC)	Result(IC)	Result(POC)	Result(NPOC)	Result(TN)	Unit	Vial	Date / Time	
+Standard	NPOC	cc-2	Untitled					100.0		mg/L	80, 81, 82, 83, 84, 85	7/20/2023 2:40:40 PM	
+Unknown	NPOC	DIW	Untitled					0.3840		mg/L	86	7/20/2023 2:58:51 PM	
+Unknown	NPOC	chkstd_10ppm	Untitled					9.870		mg/L	87	7/20/2023 3:10:29 PM	
+Unknown	NPOC	redox-001	Untitled					16.18		mg/L	1	7/20/2023 3:25:15 PM	
+Unknown	NPOC	redox-002	Untitled					17.10		mg/L	2	7/20/2023 3:37:02 PM	
+Unknown	NPOC	redox-003	Untitled					12.07		mg/L	3	7/20/2023 3:48:46 PM	
+Unknown	NPOC	redox-004	Untitled					14.93		mg/L	4	7/20/2023 4:00:56 PM	
+Unknown	NPOC	redox-005	Untitled					15.18		mg/L	5	7/20/2023 4:12:51 PM	
+Unknown	NPOC	redox-006	Untitled					12.08		mg/L	6	7/20/2023 4:24:48 PM	
+Unknown	NPOC	redox-007	Untitled					7.185		mg/L	7	7/20/2023 4:36:45 PM	
+Unknown	NPOC	redox-008	Untitled					7.617		mg/L	8	7/20/2023 4:51:16 PM	
+Unknown	NPOC	redox-009	Untitled					10.12		mg/L	9	7/20/2023 5:03:07 PM	
+Unknown	NPOC	redox-010	Untitled					11.63		mg/L	10	7/20/2023 5:14:58 PM	
+Unknown	NPOC	redox-011	Untitled					13.54		mg/L	11	7/20/2023 5:26:48 PM	
+Unknown	NPOC	redox-012	Untitled					11.87		mg/L	12	7/20/2023 5:38:31 PM	
+Unknown	NPOC	redox-013	Untitled					11.33		mg/L	13	7/20/2023 5:50:24 PM	
+Unknown	NPOC	redox-014	Untitled					14.18		mg/L	14	7/20/2023 6:02:08 PM	
+Unknown	NPOC	redox-015	Untitled					9.417		mg/L	15	7/20/2023 6:14:01 PM	
+Unknown	NPOC	DIW	Untitled					0.2679		mg/L	88	7/20/2023 6:26:18 PM	
+Unknown	NPOC	chkstd_10ppm	Untitled					9.729		mg/L	89	7/20/2023 6:38:28 PM	
+Unknown	NPOC	redox_046	Untitled					42.53		mg/L	16	7/20/2023 6:53:22 PM	
+Unknown	NPOC	redox_047	Untitled					45.36		mg/L	17	7/20/2023 7:05:43 PM	
+Unknown	NPOC	redox_048	Untitled					46.98		mg/L	18	7/20/2023 7:18:08 PM	
+Unknown	NPOC	redox_049	Untitled					45.65		mg/L	19	7/20/2023 7:30:25 PM	
+Unknown	NPOC	redox_050	Untitled					41.87		mg/L	20	7/20/2023 7:42:39 PM	
+Unknown	NPOC	redox_051	Untitled					9.108		mg/L	21	7/20/2023 7:54:21 PM	
+Unknown	NPOC	redox_052	Untitled					9.085		mg/L	22	7/20/2023 8:06:20 PM	
+Unknown	NPOC	redox_053	Untitled					9.899		mg/L	23	7/20/2023 8:18:02 PM	
+Unknown	NPOC	redox_054	Untitled					9.177		mg/L	24	7/20/2023 8:29:53 PM	
+Unknown	NPOC	redox_055	Untitled					8.008		mg/L	25	7/20/2023 8:41:25 PM	
+Unknown	NPOC	redox_056	Untitled					3.665		mg/L	26	7/20/2023 8:52:19 PM	
+Unknown	NPOC	redox_057	Untitled					3.889		mg/L	27	7/20/2023 9:03:14 PM	
+Unknown	NPOC	redox_058	Untitled					4.228		mg/L	28	7/20/2023 9:17:12 PM	
+Unknown	NPOC	redox_059	Untitled					4.102		mg/L	29	7/20/2023 9:28:13 PM	
+Unknown	NPOC	redox_060	Untitled					4.047		mg/L	30	7/20/2023 9:39:05 PM	
+Unknown	NPOC	blank_water_t0	Untitled					0.6734		mg/L	31	7/20/2023 9:51:49 PM	
+Unknown	NPOC	DIW	Untitled					0.2199		mg/L	90	7/20/2023 10:06:05 PM	
+Unknown	NPOC	chkstd_10ppm	Untitled					9.753		mg/L	91	7/20/2023 10:17:48 PM	
+Unknown	NPOC	test_redox_031	Untitled					76.10		mg/L	1	7/27/2023 3:13:43 PM	
+Unknown	NPOC	test_redox_036	Untitled					30.68		mg/L	2	7/27/2023 3:32:46 PM	
+Standard	NPOC	cc-2	Untitled					100.0		mg/L	80, 81, 82, 83, 84, 85	7/27/2023 5:16:41 PM	
+Unknown	NPOC	DIW	Untitled					0.5050		mg/L	86	7/27/2023 5:31:49 PM	
+Unknown	NPOC	chkstd_10ppm	Untitled					10.06		mg/L	87	7/27/2023 5:43:28 PM	
+Unknown	NPOC	redox_031	Untitled					72.10		mg/L	1	7/27/2023 5:58:45 PM	
+Unknown	NPOC	redox_032	Untitled					83.73		mg/L	2	7/27/2023 6:11:33 PM	
+Unknown	NPOC	redox_033	Untitled					66.32		mg/L	3	7/27/2023 6:23:47 PM	
+Unknown	NPOC	redox_034	Untitled					72.59		mg/L	4	7/27/2023 6:36:24 PM	
+Unknown	NPOC	redox_035	Untitled					81.32		mg/L	5	7/27/2023 6:55:36 PM	
+Unknown	NPOC	redox_036	Untitled					34.45		mg/L	6	7/27/2023 7:14:19 PM	
+Unknown	NPOC	redox_037	Untitled					41.05		mg/L	7	7/27/2023 7:33:02 PM	
+Unknown	NPOC	redox_038	Untitled					21.48		mg/L	8	7/27/2023 7:51:34 PM	
+Unknown	NPOC	redox_039	Untitled					16.75		mg/L	9	7/27/2023 8:10:11 PM	
+Unknown	NPOC	redox_040	Untitled					12.77		mg/L	10	7/27/2023 8:29:01 PM	
+Unknown	NPOC	redox_041	Untitled					6.949		mg/L	11	7/27/2023 8:43:27 PM	
+Unknown	NPOC	redox_043	Untitled					8.120		mg/L	12	7/27/2023 8:54:44 PM	
+Unknown	NPOC	redox_044	Untitled					8.266		mg/L	13	7/27/2023 9:06:27 PM	
+Unknown	NPOC	redox_045	Untitled					13.02		mg/L	14	7/27/2023 9:18:25 PM	
+Unknown	NPOC	redox_blank	Untitled					66.16		mg/L	15	7/27/2023 9:31:51 PM	
+Unknown	NPOC	DIW	Untitled					0.5822		mg/L	88	7/27/2023 9:49:53 PM	
+Unknown	NPOC	chkstd_10ppm	Untitled					9.894		mg/L	89	7/27/2023 10:02:04 PM	
