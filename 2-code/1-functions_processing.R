@@ -89,3 +89,56 @@ process_optode_data = function(optode_data, optode_map, sample_key){
 # optode_processed %>% write.csv("1-data/optode_processed_water_2wk_first24hr.csv", row.names = F, na = "")
 # 
 
+# process Shimadzu --------------------------------------------------------
+
+
+import_weoc_data = function(FILEPATH){
+  
+  filePaths_weoc <- list.files(path = FILEPATH, pattern = "*.txt", full.names = TRUE)
+  weoc_dat <- do.call(bind_rows, lapply(filePaths_weoc, function(path) {
+    df <- read_tsv(path, skip = 10)
+    df}))
+  
+}
+
+weoc_data = import_weoc_data(FILEPATH = "1-data/doc")
+process_weoc = function(weoc_data, sample_key, dry_weight){
+  
+  npoc_processed = 
+    weoc_data %>% 
+    # remove skipped samples
+    filter(!`Sample ID` %in% "skip") %>% 
+    # keep only relevant columns and rename them
+    dplyr::select(`Sample Name`, `Result(NPOC)`) %>% 
+    rename(sample_label = `Sample Name`,
+           npoc_mgL = `Result(NPOC)`) %>% 
+    # keep only sample rows 
+    filter(grepl("redox", sample_label)) %>% 
+    mutate(sample_label = str_replace(sample_label, "-", "_")) %>% 
+    # join the analysis key to get the sample_label
+    left_join(sample_key) %>% 
+    filter(!is.na(location))
+    # do blank/dilution correction
+ #  mutate(blank_mgL = case_when(sample_name == "blank-filter" ~ npoc_mgL)) %>% 
+ #  fill(blank_mgL, .direction = c("up")) %>% 
+ #  mutate(NPOC_dilution = as.numeric(NPOC_dilution),
+ #         npoc_corr_mgL = (npoc_mgL-blank_mgL) * NPOC_dilution) %>% 
+ #  # join gwc and subsampling weights to normalize data to soil weight
+ #  left_join(dry_weight) %>% 
+ #  mutate(npoc_ug_g = npoc_corr_mgL * ((water_g + soilwater_g)/od_g),
+ #         npoc_ug_g = round(npoc_ug_g, 2)) %>% 
+ #  dplyr::select(sample_name, npoc_corr_mgL, npoc_ug_g) %>% 
+ #  force()
+  
+  npoc_processed
+  
+  npoc_processed %>% 
+    ggplot(aes(x = timepoint, y = npoc_mgL, color = location))+
+    geom_point(position = position_dodge(width = 0.5))+
+    facet_wrap(~treatment)
+  
+  
+}
+
+#
+
