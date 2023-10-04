@@ -29,7 +29,7 @@ list(
   # optode
   tar_target(optode_map, read_sheet("1eFDvH17jjYRsDIx_J8ep_QzPAOO5LBXiGnFZOoA9fSM") %>% mutate_all(as.character)),
   tar_target(optode_data, import_optode_data("1-data/optodes")),
-  tar_target(optode_data_processed, process_optode_data(optode_data, optode_map, sample_key))
+  tar_target(optode_processed, process_optode_data(optode_data, optode_map, sample_key))
   
   
 )
