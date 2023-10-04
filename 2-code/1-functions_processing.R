@@ -144,14 +144,11 @@ process_weoc = function(weoc_data, sample_key, dry_weight){
 
 # process iron ------------------------------------------------------------
 
-
 import_iron = function(FILEPATH = "1-data/microplate-iron"){
   
   # import map
   ferrozine_map = read_sheet("1VZ2F1Mg9LSdbJV1iV-3GN5Vv-JkUBP8qbIVNrK0A4mw", sheet = "ferrozine", col_types = "c") %>% mutate_all(as.character)
-#  wle = read_sheet("1pzvGUvjK6qV8BVYSfoc2cid88dx3v7ZOD7TnYFgyWbc", sheet = "wle") %>% mutate_all(as.character) %>% mutate(region = "WLE")
-#  ferrozine_map = bind_rows(cb, wle)
-  
+
   # import data files (plate reader)
   filePaths_ferrozine <- list.files(path = FILEPATH, pattern = "csv", full.names = TRUE, recursive = TRUE)
   ferrozine_data <- do.call(bind_rows, lapply(filePaths_ferrozine, function(path) {
@@ -163,6 +160,10 @@ import_iron = function(FILEPATH = "1-data/microplate-iron"){
        ferrozine_data = ferrozine_data)
   
 }
+
+ferrozine_map = import_iron(FILEPATH = "1-data/microplate-iron")$ferrozine_map
+ferrozine_data = import_iron(FILEPATH = "1-data/microplate-iron")$ferrozine_data
+
 process_iron = function(ferrozine_map, ferrozine_data, moisture_processed, subsampling){
   
   # clean the map
@@ -172,7 +173,7 @@ process_iron = function(ferrozine_map, ferrozine_data, moisture_processed, subsa
     mutate(date = mdy(date)) %>% 
     fill(date, tray) %>% 
     pivot_longer(-c(date, tray, analysis, dilution, letter), names_to = "number", values_to = "sample_label") %>% 
-    mutate_at(vars(c(tray, dilution, number)), as.numeric) %>% 
+    mutate_at(vars(c(dilution, number)), as.numeric) %>% 
     mutate(well_position = paste0(letter, number),
            dilution = if_else(is.na(dilution), 1, dilution)) %>% 
     drop_na() %>% 
@@ -197,11 +198,13 @@ process_iron = function(ferrozine_map, ferrozine_data, moisture_processed, subsa
            #region = toupper(region),
            date = str_extract(source, "[0-9]{4}-[0-9]{2}-[0-9]{2}"),
            date = ymd(date),
-           tray = str_extract(source, "tray[1-9]"),
-           tray = parse_number(tray),
+           tray = str_extract(source, "tray[1-9][a-z]?"),
+           tray = str_remove(tray, "tray"),
+           # tray = parse_number(tray),
            absorbance_562 = as.numeric(absorbance_562)) %>% 
     dplyr::select(date, tray, well_position, absorbance_562) %>% 
-    right_join(map_processed, by = c("date", "tray", "well_position")) 
+    right_join(map_processed, by = c("date", "tray", "well_position")) %>% 
+    filter(!grepl("skip", sample_label))
   
   calibrate_ferrozine_data = function(data_processed){
     # now do the calibrations
@@ -254,7 +257,10 @@ process_iron = function(ferrozine_map, ferrozine_data, moisture_processed, subsa
     group_by(sample_label, extract_type) %>% 
     pivot_wider(names_from = "analysis", values_from = "ppm_calculated") %>% 
     mutate(across(where(is.numeric), round, 2)) %>% 
-    mutate(Fe3 = Fe_total - Fe2)
+    mutate(Fe3 = Fe_total - Fe2) %>% 
+    rename(Fe2_ppm = Fe2,
+           Fe3_ppm = Fe3,
+           Fe_total_ppm = Fe_total)
   
   
   samples_with_key = 
@@ -263,33 +269,35 @@ process_iron = function(ferrozine_map, ferrozine_data, moisture_processed, subsa
   
   samples_with_key %>% 
     filter(extract_type == "HCl") %>% 
-    ggplot(aes(x = location, y = Fe2/Fe3, color = treatment))+
-    geom_point()
+    ggplot(aes(x = location, y = Fe2_ppm/Fe3_ppm, color = timepoint))+
+    geom_point()+
+    facet_wrap(~treatment)
   
-  samples2 = 
-    samples %>% 
-    dplyr::select(sample_label, starts_with("Fe")) %>% 
-    pivot_longer(cols = starts_with("Fe"), names_to = "species", values_to = "ppm") %>% 
-    left_join(moisture_processed) %>% 
-    left_join(subsampling %>% dplyr::select(sample_label, iron_g) %>% drop_na()) %>% 
-    rename(fm_g = iron_g) %>% 
-    mutate(ppm = as.numeric(ppm),
-           od_g = fm_g/((gwc_perc/100)+1),
-           soilwater_g = fm_g - od_g,
-           ug_g = ppm * ((25 + soilwater_g)/od_g),
-           ug_g = round(ug_g, 2)) %>% 
-    dplyr::select(sample_label, species, ppm, ug_g) %>% 
-    arrange(sample_label) %>% 
-    pivot_longer(-c(sample_label, species)) %>% 
-    mutate(name = paste0(species, "_", name)) %>% 
-    dplyr::select(-species) %>% 
-    filter(!grepl("blank", sample_label)) %>% 
-    pivot_wider() %>% 
-    mutate(analysis = "Ferrozine") %>% 
-    dplyr::select(sample_label, analysis, Fe_total_ug_g) %>% 
-    rename(Fe_ugg = Fe_total_ug_g) %>% 
-    filter(Fe_ugg >= 0)
+##  samples2 = 
+##    samples %>% 
+##    dplyr::select(sample_label, starts_with("Fe")) %>% 
+##    pivot_longer(cols = starts_with("Fe"), names_to = "species", values_to = "ppm") %>% 
+##    left_join(moisture_processed) %>% 
+##    left_join(subsampling %>% dplyr::select(sample_label, iron_g) %>% drop_na()) %>% 
+##    rename(fm_g = iron_g) %>% 
+##    mutate(ppm = as.numeric(ppm),
+##           od_g = fm_g/((gwc_perc/100)+1),
+##           soilwater_g = fm_g - od_g,
+##           ug_g = ppm * ((25 + soilwater_g)/od_g),
+##           ug_g = round(ug_g, 2)) %>% 
+##    dplyr::select(sample_label, species, ppm, ug_g) %>% 
+##    arrange(sample_label) %>% 
+##    pivot_longer(-c(sample_label, species)) %>% 
+##    mutate(name = paste0(species, "_", name)) %>% 
+##    dplyr::select(-species) %>% 
+##    filter(!grepl("blank", sample_label)) %>% 
+##    pivot_wider() %>% 
+##    mutate(analysis = "Ferrozine") %>% 
+##    dplyr::select(sample_label, analysis, Fe_total_ug_g) %>% 
+##    rename(Fe_ugg = Fe_total_ug_g) %>% 
+##    filter(Fe_ugg >= 0)
   
-  samples2
+  samples_with_key
 }
 
+#
