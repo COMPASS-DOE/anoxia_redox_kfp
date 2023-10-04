@@ -23,7 +23,10 @@ bhorizon = mean(c(3.870, 3.756, 3.831)) * 3
 # download sample metadata files ----------------------------------------------
 ## sample key
 # load and clean sample key
-sample_key = read_sheet("1A72s9JH1E91M_1IfvrBkz6rQdwnT0z6hFmL5ELYw8y8") %>% mutate_all(as.character)
+sample_key = read_sheet("1A72s9JH1E91M_1IfvrBkz6rQdwnT0z6hFmL5ELYw8y8") %>% 
+  mutate_all(as.character) %>% 
+  dplyr::select(sample_label, site, treatment, timepoint, location, replicate)
+
 # export
 sample_key %>% write.csv("1-data/sample_key.csv", row.names = FALSE, na = "")
 
