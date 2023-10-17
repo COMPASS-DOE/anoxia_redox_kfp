@@ -257,7 +257,8 @@ process_iron = function(ferrozine_map, ferrozine_data){
     group_by(sample_label, extract_type) %>% 
     pivot_wider(names_from = "analysis", values_from = "ppm_calculated") %>% 
     mutate(across(where(is.numeric), round, 2)) %>% 
-    mutate(Fe3 = Fe_total - Fe2) %>% 
+    mutate(Fe3 = Fe_total - Fe2,
+           Fe3 = Fe3 * 100/80) %>% # correct for 80% reduction efficiency of ascorbic acid
     rename(Fe2_ppm = Fe2,
            Fe3_ppm = Fe3,
            Fe_total_ppm = Fe_total) %>% 
