@@ -164,7 +164,7 @@ import_iron = function(FILEPATH = "1-data/microplate-iron"){
 ferrozine_map = import_iron(FILEPATH = "1-data/microplate-iron")$ferrozine_map
 ferrozine_data = import_iron(FILEPATH = "1-data/microplate-iron")$ferrozine_data
 
-process_iron = function(ferrozine_map, ferrozine_data, moisture_processed, subsampling){
+process_iron = function(ferrozine_map, ferrozine_data){
   
   # clean the map
   map_processed = 
@@ -260,18 +260,25 @@ process_iron = function(ferrozine_map, ferrozine_data, moisture_processed, subsa
     mutate(Fe3 = Fe_total - Fe2) %>% 
     rename(Fe2_ppm = Fe2,
            Fe3_ppm = Fe3,
-           Fe_total_ppm = Fe_total)
-  
-  
-  samples_with_key = 
-    samples %>% 
-    left_join(sample_key)
-  
-  samples_with_key %>% 
+           Fe_total_ppm = Fe_total) %>% 
+    ungroup() %>% 
     filter(extract_type == "HCl") %>% 
-    ggplot(aes(x = location, y = Fe2_ppm/Fe3_ppm, color = timepoint))+
-    geom_point()+
-    facet_wrap(~treatment)
+    dplyr::select(-extract_type) %>% 
+    mutate(analysis = "iron") %>% 
+    pivot_longer(cols = starts_with("Fe"), names_to = "analyte", values_to = "value") %>% 
+    mutate(value = as.numeric(value))
+    
+  
+  
+##  samples_with_key = 
+##    samples %>% 
+##    left_join(sample_key)
+##  
+##  samples_with_key %>% 
+##    filter(extract_type == "HCl") %>% 
+##    ggplot(aes(x = location, y = Fe2_ppm/Fe3_ppm, color = timepoint))+
+##    geom_point()+
+##    facet_wrap(~treatment)
   
 ##  samples2 = 
 ##    samples %>% 
@@ -297,7 +304,8 @@ process_iron = function(ferrozine_map, ferrozine_data, moisture_processed, subsa
 ##    rename(Fe_ugg = Fe_total_ug_g) %>% 
 ##    filter(Fe_ugg >= 0)
   
-  samples_with_key
+  samples
 }
-
+iron_processed = process_iron(ferrozine_map, ferrozine_data)
 #
+
