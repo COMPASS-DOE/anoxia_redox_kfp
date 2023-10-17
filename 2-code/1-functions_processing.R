@@ -246,7 +246,9 @@ process_iron = function(ferrozine_map, ferrozine_data){
     pivot_wider(names_from = "analysis", values_from = "ppm_calculated") %>% 
     mutate(across(where(is.numeric), round, 2)) %>% 
     mutate(Fe3 = Fe_total - Fe2,
-           Fe3 = Fe3 * 100/80) %>% # correct for 80% reduction efficiency of ascorbic acid
+           Fe3 = Fe3 * 100/80,  # correct for 80% reduction efficiency of ascorbic acid
+           Fe_total = Fe2 + Fe3 # re-calculate total-Fe based on corrected Fe3
+           ) %>% 
     rename(Fe2_ppm = Fe2,
            Fe3_ppm = Fe3,
            Fe_total_ppm = Fe_total) %>% 
@@ -324,9 +326,6 @@ process_ions = function(ions_data){
   
   ions = 
     ions_data %>% 
-    #dplyr::select(-`Bromide UV`) %>% 
-    #filter(is.na(skip)) %>% 
-    #dplyr::select(-skip) %>% 
     mutate_all(as.character) %>% 
     dplyr::select(-starts_with("...")) %>% 
     pivot_longer(-c(sample_label, source)) %>% 
@@ -398,7 +397,10 @@ process_ions = function(ions_data){
     mutate(ion = tolower(ion),
            ion = paste0(ion, "_ppm")) %>% 
     rename(analyte = ion,
-           value = ppm_corrected)
+           value = ppm_corrected) %>% 
+    filter(analyte %in% c("sodium_ppm", "calcium_ppm", "chloride",
+                          "ammonium_ppm", "nitrate_ppm",
+                          "sulfate_ppm", "phosphate_ppm"))
   
   samples_corrected
 }
@@ -413,14 +415,5 @@ combine_data = function(iron_processed, ions_ic_processed, doc_processed, sample
       iron_processed, ions_ic_processed
     )
   
-  
-  
-  combined %>% 
-    filter(analyte == "sulfate_ppm") %>% 
-    left_join(sample_key) %>% 
-    ggplot(aes(x = location, y = value, color = timepoint))+
-    geom_point()+
-    facet_wrap(~treatment)
-  
-  
+  combined
 }
