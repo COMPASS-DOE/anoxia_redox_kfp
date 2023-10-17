@@ -420,3 +420,23 @@ process_ions = function(ions_data){
 ions_ic_processed = process_ions(ions_data)
 
 #
+# combined data -----------------------------------------------------------
+
+combine_data = function(iron_processed, ions_ic_processed, doc_processed, sample_key){
+  
+  combined = 
+    bind_rows(
+      iron_processed, ions_ic_processed
+    )
+  
+  
+  
+  combined %>% 
+    filter(analyte == "sulfate_ppm") %>% 
+    left_join(sample_key) %>% 
+    ggplot(aes(x = location, y = value, color = timepoint))+
+    geom_point()+
+    facet_wrap(~treatment)
+  
+  
+}
