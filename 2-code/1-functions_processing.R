@@ -309,3 +309,114 @@ process_iron = function(ferrozine_map, ferrozine_data){
 iron_processed = process_iron(ferrozine_map, ferrozine_data)
 #
 
+# process IC ions ---------------------------------------------------------
+
+import_ions = function(FILEPATH){
+  
+  anions <- 
+    list.files(path=FILEPATH, pattern = c("anion", ".csv"), full.names = TRUE) %>% 
+    lapply(read_csv, skip = 5, id = "source") %>% 
+    bind_rows %>% 
+    rename(sample_label = "...3") %>% 
+    mutate_all(as.character)
+  
+  cations <- 
+    list.files(path=FILEPATH, pattern = c("cation", ".csv"), full.names = TRUE) %>% 
+    lapply(read_csv, skip = 5, id = "source") %>% 
+    bind_rows %>% 
+    rename(sample_label = "...3") %>% 
+    mutate_all(as.character)
+  
+  ions <- 
+    bind_rows(cations, anions)
+  
+  ions
+}
+
+ions_data = import_ions(FILEPATH = "1-data/ions")
+process_ions = function(ions_data){
+  
+  ions = 
+    ions_data %>% 
+    #dplyr::select(-`Bromide UV`) %>% 
+    #filter(is.na(skip)) %>% 
+    #dplyr::select(-skip) %>% 
+    mutate_all(as.character) %>% 
+    dplyr::select(-starts_with("...")) %>% 
+    pivot_longer(-c(sample_label, source)) %>% 
+    mutate(date_run = str_extract(source, "[0-9]{8}"),
+           date_run = lubridate::ymd(date_run)) %>% 
+    # remove "Nitrate" and "Nitrite" because we will use the UV-detector versions
+    filter(!name %in% c("Nitrate", "Nitrite")) %>% 
+    mutate(value = recode(value, "n.a." = "0"),
+           name = str_remove(name, " UV"),
+           value = as.numeric(value)) %>% 
+    filter(!is.na(value)) %>% 
+    rename(ppm = value,
+           ion = name) %>% 
+    filter(!ion %in% c("Lithium", "Nitrite"))
+  
+  blanks = 
+    ions %>% 
+    filter(grepl("redox", sample_label, ignore.case = T)) %>% 
+    filter(grepl("blank", sample_label, ignore.case = T))
+  
+  samples = 
+    ions %>% 
+    filter(grepl("redox", sample_label, ignore.case = T)) %>% 
+    filter(!grepl("blank", sample_label, ignore.case = T)) %>% 
+    mutate(dilution_factor = parse_number(str_extract(sample_label, "_[0-9]x")),
+           dilution_factor = if_else(is.na(dilution_factor), 1, dilution_factor),
+           ppm_corrected = ppm * dilution_factor,
+           sample_label = str_remove(sample_label, "_[0-9]x"),
+           sample_label = tolower(sample_label))
+    
+  checking_dilutions = function(samples){
+    # the same dilution may not work for all ions
+    # so, plot the samples with multiple dilutions to see if there's an easy way to decide
+    # unfortunately, this must be done manually.
+
+    samples_dilution = 
+      samples %>% 
+      group_by(sample_label, ion) %>% 
+      dplyr::mutate(n = n()) %>% 
+      filter(n > 1)
+    
+    samples_dilution %>% 
+      ggplot(aes(x = sample_label, y = ppm, color = as.character(dilution_factor)))+
+      geom_point()+
+      facet_wrap(~ion, scales = "free")
+  
+    # so far: for sulfate, use dilution = 2x/4x, whichever is higher
+    # for all others, use dilution = 1  
+    
+  }
+  
+  samples_nonSO4 = 
+    samples %>% 
+    filter(!ion == "Sulfate") %>% 
+    filter(dilution_factor == 1)
+  
+  samples_SO4 = 
+    samples %>% 
+    filter(ion == "Sulfate") %>% 
+    group_by(sample_label) %>% 
+    dplyr::mutate(max = dilution_factor == max(dilution_factor)) %>% 
+    filter(max) %>% 
+    dplyr::select(-max)
+
+  samples_corrected = 
+    bind_rows(samples_nonSO4, samples_SO4) %>% 
+    mutate(analysis = "IC") %>% 
+    dplyr::select(sample_label, analysis, ion, ppm_corrected) %>% 
+    mutate(ion = tolower(ion),
+           ion = paste0(ion, "_ppm")) %>% 
+    rename(analyte = ion,
+           value = ppm_corrected)
+  
+  samples_corrected
+}
+
+ions_ic_processed = process_ions(ions_data)
+
+#
