@@ -21,9 +21,6 @@ import_optode_data = function(FILEPATH){
     df[["source"]] <- rep(path, nrow(df))
     df}))
 }
-
-optode_data = import_optode_data(FILEPATH = "1-data/optodes")
-
 process_optode_data = function(optode_data, optode_map, sample_key){
   
   optode_long = 
@@ -86,9 +83,7 @@ process_optode_data = function(optode_data, optode_map, sample_key){
   optode_processed
 }
 
-# optode_processed %>% write.csv("1-data/optode_processed_water_2wk_first24hr.csv", row.names = F, na = "")
-# 
-
+#
 # process Shimadzu --------------------------------------------------------
 
 
@@ -100,8 +95,6 @@ import_weoc_data = function(FILEPATH){
     df}))
   
 }
-
-weoc_data = import_weoc_data(FILEPATH = "1-data/doc")
 process_weoc = function(weoc_data, sample_key, dry_weight){
   
   npoc_processed = 
@@ -132,16 +125,15 @@ process_weoc = function(weoc_data, sample_key, dry_weight){
   
   npoc_processed
   
-  npoc_processed %>% 
-    ggplot(aes(x = timepoint, y = npoc_mgL, color = location))+
-    geom_point(position = position_dodge(width = 0.5))+
-    facet_wrap(~treatment)
+#  npoc_processed %>% 
+#    ggplot(aes(x = timepoint, y = npoc_mgL, color = location))+
+#    geom_point(position = position_dodge(width = 0.5))+
+#    facet_wrap(~treatment)
   
   
 }
 
 #
-
 # process iron ------------------------------------------------------------
 
 import_iron = function(FILEPATH = "1-data/microplate-iron"){
@@ -160,10 +152,6 @@ import_iron = function(FILEPATH = "1-data/microplate-iron"){
        ferrozine_data = ferrozine_data)
   
 }
-
-ferrozine_map = import_iron(FILEPATH = "1-data/microplate-iron")$ferrozine_map
-ferrozine_data = import_iron(FILEPATH = "1-data/microplate-iron")$ferrozine_data
-
 process_iron = function(ferrozine_map, ferrozine_data){
   
   # clean the map
@@ -307,9 +295,8 @@ process_iron = function(ferrozine_map, ferrozine_data){
   
   samples
 }
-iron_processed = process_iron(ferrozine_map, ferrozine_data)
-#
 
+#
 # process IC ions ---------------------------------------------------------
 
 import_ions = function(FILEPATH){
@@ -333,8 +320,6 @@ import_ions = function(FILEPATH){
   
   ions
 }
-
-ions_data = import_ions(FILEPATH = "1-data/ions")
 process_ions = function(ions_data){
   
   ions = 
@@ -417,8 +402,6 @@ process_ions = function(ions_data){
   
   samples_corrected
 }
-
-ions_ic_processed = process_ions(ions_data)
 
 #
 # combined data -----------------------------------------------------------

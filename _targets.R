@@ -28,8 +28,24 @@ list(
   
   # optode
   tar_target(optode_map, read_sheet("1eFDvH17jjYRsDIx_J8ep_QzPAOO5LBXiGnFZOoA9fSM") %>% mutate_all(as.character)),
-  tar_target(optode_data, import_optode_data("1-data/optodes")),
-  tar_target(optode_processed, process_optode_data(optode_data, optode_map, sample_key))
+  tar_target(optode_data, import_optode_data("1-data/raw_data/optodes")),
+  tar_target(optode_processed, process_optode_data(optode_data, optode_map, sample_key)),
+  
+  # TOC
+  tar_target(weoc_data, import_weoc_data(FILEPATH = "1-data/raw_data/doc")),
+  tar_target(weoc_processed, process_weoc(weoc_data, sample_key)),
+  
+  # Iron - ferrozine
+  tar_target(ferrozine_map, import_iron(FILEPATH = "1-data/raw_data/microplate-iron")$ferrozine_map),
+  tar_target(ferrozine_data, import_iron(FILEPATH = "1-data/raw_data/microplate-iron")$ferrozine_data),
+  tar_target(iron_processed, process_iron(ferrozine_map, ferrozine_data)),
+  
+  # Sulfide
+  
+  # IC ions
+  tar_target(ions_data, import_ions(FILEPATH = "1-data/raw_data/ions")),
+  tar_target(ions_ic_processed, process_ions(ions_data)),
   
   
+  tar_target(combined_data, combine_data(iron_processed, ions_ic_processed, doc_processed, sample_key))
 )
