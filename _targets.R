@@ -46,6 +46,9 @@ list(
   tar_target(ions_data, import_ions(FILEPATH = "1-data/raw_data/ions")),
   tar_target(ions_ic_processed, process_ions(ions_data)),
   
+  # ORP-pH-DO
+  tar_target(orp, googlesheets4::read_sheet("1xo-PzO0yxztvpFxlcaXbW5TEdAgz25ToN3R1qVORf8I")),
+  tar_target(ghg, googlesheets4::read_sheet("1uFvGIBwdrwK2nmvcpnkD9nubjlnLj973qr8qPuv7S7E")),
   
   tar_target(combined_data, combine_data(iron_processed, ions_ic_processed, doc_processed, sample_key))
 )
