@@ -16,6 +16,59 @@ reorder_factors = function(dat){
            treatment = factor(treatment, levels = c("water", "carbon")))
 }
   
+make_optode_graphs = function(optode_processed, orp){
+  
+  optode_processed = 
+    optode_processed %>% 
+    mutate(treatment = factor(treatment, levels = c("water", "carbon")))
+  
+  # plot only optode data
+  optode_ts = 
+    optode_processed %>% 
+    filter(!is.na(treatment)) %>% 
+    #  filter(optode_disc_number == "4038") %>% 
+    arrange(time_minutes) %>% 
+    ggplot(aes(x = time_minutes2/60/24, y = do_mg_L, color = location, group = sample_label))+
+    geom_line(linewidth = 0.5,
+              show.legend = F)+
+    geom_point(size = 1, show.legend = F)+
+    facet_wrap(~treatment + location)+
+    labs(x = "time, day")+
+    #xlim(0,2)+
+    NULL
+
+  # plot optode + overlay Firesting data
+  optode_final_datetime = 
+    optode_processed %>% 
+    group_by(sample_label) %>% 
+    dplyr::summarise(time_minutes2 = max(time_minutes2))
+  
+  firesting_do = 
+    orp %>% 
+    dplyr::select(sample_label, DO_mgL) %>% 
+    left_join(optode_final_datetime) %>% 
+    left_join(sample_key) %>% 
+    drop_na() %>% 
+    mutate(treatment = factor(treatment, levels = c("water", "carbon")))
+  
+  optode_firesting = 
+    optode_processed %>% 
+    filter(!is.na(treatment)) %>% 
+    #  filter(optode_disc_number == "4038") %>% 
+    arrange(time_minutes) %>% 
+    ggplot(aes(x = time_minutes2/60/24, y = do_mg_L, color = location, group = sample_label))+
+    geom_line(linewidth = 0.5,
+              show.legend = F)+
+    geom_point(size = 1, show.legend = F)+
+    facet_wrap(~treatment + location)+
+    labs(x = "time, day")+
+    geom_point(data = firesting_do, aes(y = DO_mgL), size = 3, color = "black", shape = 1)+
+    #xlim(0,2)+
+    NULL
+  
+  list(optode_ts = optode_ts,
+       optode_firesting = optode_firesting)
+}
 
 
 make_chemistry_graphs = function(combined_data, sample_key){

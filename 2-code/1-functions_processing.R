@@ -52,33 +52,6 @@ process_optode_data = function(optode_data, optode_map, sample_key){
                 mutate(start_datetime = lubridate::ymd_hms(start_datetime))) %>% 
     left_join(sample_key) %>% 
     filter(sample_label != "redox_042")
-  
-   optode_processed %>% 
-     filter(!is.na(treatment)) %>% 
-   #  filter(optode_disc_number == "4038") %>% 
-     arrange(time_minutes) %>% 
-     ggplot(aes(x = time_minutes2/60/24, y = do_mg_L, color = sample_label))+
-     geom_line(linewidth = 0.5,
-               show.legend = F)+
-     geom_point(size = 2, show.legend = F)+
-     facet_wrap(~treatment + location)+
-     labs(x = "time, day")+
-     #xlim(0,2)+
-     NULL
-  
-   optode_processed %>% 
-     #  filter(optode_disc_number == "4038") %>% 
-     filter(!is.na(treatment)) %>% 
-     arrange(time_minutes2) %>% 
-     ggplot(aes(x = time_minutes2/60/24, y = do_mg_L, #group = sample_label, 
-                color = treatment))+
-    # geom_smooth(linewidth = 2, se = F)+
-     geom_line(aes(group = sample_label), alpha = 0.5, size = 1)+
-     labs(x = "time, day")+
-     facet_wrap(~location)+
-     #xlim(0,2)+
-     NULL
-   
    
   optode_processed
 }
