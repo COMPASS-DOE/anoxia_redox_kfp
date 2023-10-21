@@ -285,6 +285,135 @@ process_iron = function(ferrozine_map, ferrozine_data, dry_weights){
 }
 
 #
+# process sulfide ---------------------------------------------------------
+
+import_sulfide = function(FILEPATH = "1-data/raw_data/microplate-sulfide"){
+  
+  # import map
+  sulfide_map = read_sheet("1VZ2F1Mg9LSdbJV1iV-3GN5Vv-JkUBP8qbIVNrK0A4mw", sheet = "sulfide", col_types = "c") %>% mutate_all(as.character)
+  
+  # import data files (plate reader)
+  filePaths_sulfide <- list.files(path = FILEPATH, pattern = "csv", full.names = TRUE, recursive = TRUE)
+  sulfide_data <- do.call(bind_rows, lapply(filePaths_sulfide, function(path) {
+    df <- read.csv(path, header = TRUE, skip = 32) %>% mutate_all(as.character) %>% janitor::clean_names()
+    df = df %>% mutate(source = basename(path))
+    df}))
+  
+  list(sulfide_map = sulfide_map,
+       sulfide_data = sulfide_data)
+  
+}
+process_sulfide = function(sulfide_map, sulfide_data, dry_weights){
+  
+  # clean the map
+  map_processed = 
+    sulfide_map %>% 
+  #  filter(!skip %in% "skip") %>% 
+    mutate(date = ymd(date)) %>% 
+    fill(date, tray) %>% 
+    pivot_longer(-c(date, tray, letter), names_to = "number", values_to = "sample_label") %>% 
+    mutate_at(vars(c(number)), as.numeric) %>% 
+    mutate(well_position = paste0(letter, number)) %>% 
+    drop_na() %>% 
+    arrange(date, tray, number, letter) %>% 
+    mutate(sample_type = case_when(grepl("mM", sample_label) ~ "standard",
+                                   grepl("redox", sample_label) ~ "sample")) %>% 
+    dplyr::select(date, tray, well_position, sample_label, sample_type)
+  
+  
+  # clean the data
+  data_processed = 
+    sulfide_data %>% 
+    mutate_all(na_if,"") %>% 
+    #dplyr::select(-x) %>% 
+    fill(x) %>% 
+    filter(x_1 == "670") %>% 
+    dplyr::select(-x_1) %>% 
+    pivot_longer(-c(source, x), values_to = "absorbance_670") %>% 
+    mutate(name = str_remove(name, "x"),
+           well_position = paste0(x, name),
+           #region = str_extract(source, regex("cb|wle", ignore_case = TRUE)),
+           #region = toupper(region),
+           date = str_extract(source, "[0-9]{4}-[0-9]{2}-[0-9]{2}"),
+           date = ymd(date),
+           tray = str_extract(source, "Plate[1-9][a-z]?"),
+           tray = str_remove(tray, "Plate"),
+           # tray = parse_number(tray),
+           absorbance_670 = as.numeric(absorbance_670)) %>% 
+    dplyr::select(date, tray, well_position, absorbance_670) %>% 
+    right_join(map_processed, by = c("date", "tray", "well_position")) %>% 
+    filter(!is.na(absorbance_670))
+  
+  calibrate_sulfide_data = function(data_processed){
+    # now do the calibrations
+    # standards are in mM
+    # 2.5 mM = 2.5 * 32.06 mg S in 1 L solution = 80.15 mg Fe in 1 L solution
+    # therefore 2.5 mM = 80.15 mg/L or 80.15 ppm
+    
+    standards = 
+      data_processed %>% 
+      filter(grepl("standard", sample_type)) %>% 
+      mutate(standard_mM = parse_number(sample_label),
+             standard_ppm = standard_mM * 80.15/2.5) %>% 
+      dplyr::select(date, tray, absorbance_670, standard_mM, standard_ppm) %>% 
+      mutate(standard_ppm = as.numeric(standard_ppm)) %>% 
+      filter(!is.na(absorbance_670))
+    
+    standards %>% 
+      filter(standard_ppm < 9) %>% 
+      ggplot(aes(x = standard_ppm, y = absorbance_670, color = as.character(tray)))+
+      geom_point()+
+      geom_smooth(method = "lm", se = F)+
+      facet_wrap(~date + tray)
+    
+    calibration_coef = 
+      standards %>% 
+      filter(standard_ppm < 9) %>% 
+      drop_na() %>% 
+      dplyr::group_by(date) %>% 
+      dplyr::summarize(slope = lm(absorbance_670 ~ standard_ppm)$coefficients["standard_ppm"], 
+                       intercept = lm(absorbance_670 ~ standard_ppm)$coefficients["(Intercept)"])
+    
+    # y = mx + c
+    # abs = m*ppm + c
+    # ppm = abs-c/m
+    
+    # data_processed2 = 
+    data_processed %>% 
+      left_join(calibration_coef, by = c("date")) %>% 
+      mutate(ppm_calculated = ((absorbance_670 - intercept) / slope))
+    
+  }
+  
+  samples = 
+    calibrate_sulfide_data(data_processed) %>% 
+    filter(grepl("redox|blank", sample_label)) %>% 
+ #   mutate(#analysis = recode(analysis, "Fe2 (water only)" = "Fe2", "total-Fe (ascorbic)" = "Fe_total"),
+ #      ppm_calculated = ppm_calculated * dilution) %>% 
+    dplyr::select(sample_label, absorbance_670, ppm_calculated) %>% 
+    mutate(
+           sample_label = str_replace(sample_label, "redox-", "redox_"),
+           #sample_label = str_extract(sample_label, "redox_[0-9]{3}")
+           ) %>% 
+    filter(!is.na(ppm_calculated)) %>% 
+    mutate(ppm_calculated = as.numeric(ppm_calculated))
+  
+  samples2 = 
+    samples %>% 
+    rename(mgL = ppm_calculated) %>% 
+    left_join(dry_weights) %>% 
+    mutate(ugg = mgL * (vol_water_mL/wt_dry_soil_g),
+           ugg = round(ugg, 2)) %>% 
+    dplyr::select(sample_label, mgL, ugg) %>% 
+    rename(sulfide_mgL = mgL,
+           sulfide_ugg = ugg) %>% 
+#    filter(!grepl("blank", sample_label)) %>% 
+    mutate(analysis = "sulfide") 
+  
+  samples2
+}
+
+#
 # process IC ions ---------------------------------------------------------
 
 import_ions = function(FILEPATH){

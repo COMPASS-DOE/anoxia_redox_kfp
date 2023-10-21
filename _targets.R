@@ -42,6 +42,9 @@ list(
   tar_target(iron_processed, process_iron(ferrozine_map, ferrozine_data, dry_weights)),
   
   # Sulfide
+  tar_target(sulfide_map, import_sulfide(FILEPATH = "1-data/raw_data/microplate-sulfide")$sulfide_map),
+  tar_target(sulfide_data, import_sulfide(FILEPATH = "1-data/raw_data/microplate-sulfide")$sulfide_data),
+  tar_target(sulfide_processed, process_sulfide(sulfide_map, sulfide_data, dry_weights)),
   
   # IC ions
   tar_target(ions_data, import_ions(FILEPATH = "1-data/raw_data/ions")),
