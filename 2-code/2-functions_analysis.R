@@ -9,12 +9,6 @@
 ######################## ####
 
 
-reorder_factors = function(dat){
-  dat %>% 
-    mutate(location = factor(location, levels = c("upland-A", "transition-A", "upland-B")),
-           timepoint = factor(timepoint, levels = c("time-zero", "12-hr", "24-hr", "2-wk", "4-wk")),
-           treatment = factor(treatment, levels = c("water", "carbon")))
-}
   
 make_optode_graphs = function(optode_processed, orp){
   

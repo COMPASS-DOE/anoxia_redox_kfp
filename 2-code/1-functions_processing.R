@@ -9,6 +9,24 @@
 ######################## ####
 
 
+# initial setup -----------------------------------------------------------
+
+gwc = tribble(
+  ~location, ~gwc_percent,
+  "upland-A", 49.85,
+  "upland-B", 28.10,
+  "transition-A", 101.57
+)
+
+
+reorder_factors = function(dat){
+  dat %>% 
+    mutate(location = factor(location, levels = c("upland-A", "transition-A", "upland-B")),
+           timepoint = factor(timepoint, levels = c("time-zero", "12-hr", "24-hr", "2-wk", "4-wk")),
+           treatment = factor(treatment, levels = c("water", "carbon")))
+}
+
+#
 # process data - optodes --------------------------------------------------
 import_optode_data = function(FILEPATH){
   filePaths_spectra <- list.files(path = FILEPATH,pattern = c("results", ".csv"), full.names = TRUE, recursive = TRUE)
