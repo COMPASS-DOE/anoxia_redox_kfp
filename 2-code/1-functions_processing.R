@@ -539,12 +539,14 @@ process_ions = function(ions_data, dry_weights){
 #
 # combined data -----------------------------------------------------------
 
-combine_data = function(iron_processed, ions_ic_processed, weoc_processed, sample_key){
+combine_data = function(iron_processed, ions_ic_processed, weoc_processed, sulfide_processed){
   
   combined = 
     bind_rows(
-      iron_processed, ions_ic_processed, weoc_processed
-    )
+      iron_processed, ions_ic_processed, weoc_processed, sulfide_processed
+    ) %>% 
+    pivot_longer(cols = -c(sample_label, analysis), names_to = "analyte") %>% 
+    drop_na()
   
   combined
 }
