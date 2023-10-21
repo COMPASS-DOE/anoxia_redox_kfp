@@ -26,6 +26,18 @@ reorder_factors = function(dat){
            treatment = factor(treatment, levels = c("water", "carbon")))
 }
 
+compute_dry_weights = function(sample_weights){
+#  x =   
+    sample_weights %>% 
+    left_join(gwc) %>% 
+    mutate_at(vars(starts_with("wt_")), as.numeric) %>% 
+    mutate(wt_dry_soil_g = wt_field_moist_soil_g/((gwc_percent/100) + 1),
+           vol_water_mL = wt_tube_optodes_soil_water_g - wt_dry_soil_g - wt_tube_g) %>% 
+    dplyr::select(sample_label, wt_dry_soil_g, vol_water_mL)
+  
+  
+}
+
 #
 # process data - optodes --------------------------------------------------
 import_optode_data = function(FILEPATH){

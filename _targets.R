@@ -25,6 +25,7 @@ list(
   tar_target(sample_key, read.csv(sample_key_file)),
   tar_target(sample_weights_file, "1-data/sample_weights.csv", format = "file"),
   tar_target(sample_weights, read.csv(sample_weights_file)),
+  tar_target(dry_weights, compute_dry_weights(sample_weights)),
   
   # optode
   tar_target(optode_map, read_sheet("1eFDvH17jjYRsDIx_J8ep_QzPAOO5LBXiGnFZOoA9fSM") %>% mutate_all(as.character)),
