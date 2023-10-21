@@ -100,40 +100,31 @@ import_weoc_data = function(FILEPATH){
 }
 process_weoc = function(weoc_data, sample_key, dry_weight){
   
-  npoc_processed = 
+  weoc_processed = 
     weoc_data %>% 
     # remove skipped samples
     filter(!`Sample ID` %in% "skip") %>% 
     # keep only relevant columns and rename them
-    dplyr::select(`Sample Name`, `Result(NPOC)`) %>% 
+    dplyr::select(`Sample Name`, `Sample ID`, `Result(NPOC)`) %>% 
     rename(sample_label = `Sample Name`,
+           dilution = `Sample ID`,
            npoc_mgL = `Result(NPOC)`) %>% 
     # keep only sample rows 
     filter(grepl("redox", sample_label)) %>% 
     mutate(sample_label = str_replace(sample_label, "-", "_")) %>% 
-    # join the analysis key to get the sample_label
-    left_join(sample_key) %>% 
-    filter(!is.na(location))
     # do blank/dilution correction
- #  mutate(blank_mgL = case_when(sample_name == "blank-filter" ~ npoc_mgL)) %>% 
- #  fill(blank_mgL, .direction = c("up")) %>% 
- #  mutate(NPOC_dilution = as.numeric(NPOC_dilution),
- #         npoc_corr_mgL = (npoc_mgL-blank_mgL) * NPOC_dilution) %>% 
- #  # join gwc and subsampling weights to normalize data to soil weight
- #  left_join(dry_weight) %>% 
- #  mutate(npoc_ug_g = npoc_corr_mgL * ((water_g + soilwater_g)/od_g),
- #         npoc_ug_g = round(npoc_ug_g, 2)) %>% 
- #  dplyr::select(sample_name, npoc_corr_mgL, npoc_ug_g) %>% 
- #  force()
+    mutate(dilution = parse_number(dilution),
+           dilution = replace_na(dilution, 1),
+           npoc_corr_mgL = npoc_mgL * dilution) %>% 
+    #  # join gwc and subsampling weights to normalize data to soil weight
+    left_join(dry_weights) %>% 
+    mutate(npoc_ugg = npoc_corr_mgL * (vol_water_mL/wt_dry_soil_g),
+           npoc_ugg = round(npoc_ugg, 2)) %>% 
+    dplyr::select(sample_label, npoc_corr_mgL, npoc_ugg) %>% 
+    force()
   
-  npoc_processed
-  
-#  npoc_processed %>% 
-#    ggplot(aes(x = timepoint, y = npoc_mgL, color = location))+
-#    geom_point(position = position_dodge(width = 0.5))+
-#    facet_wrap(~treatment)
-  
-  
+  weoc_processed
+
 }
 
 #
@@ -254,11 +245,10 @@ process_iron = function(ferrozine_map, ferrozine_data){
            ) %>% 
     rename(Fe2_ppm = Fe2,
            Fe3_ppm = Fe3,
-           Fe_total_ppm = Fe_total) %>% 
+           FeTotal_ppm = Fe_total) %>% 
     ungroup() %>% 
     filter(extract_type == "HCl") %>% 
     dplyr::select(-extract_type) %>% 
-    mutate(analysis = "iron") %>% 
     pivot_longer(cols = starts_with("Fe"), names_to = "analyte", values_to = "value") %>% 
     mutate(value = as.numeric(value))
     
@@ -274,31 +264,23 @@ process_iron = function(ferrozine_map, ferrozine_data){
 ##    geom_point()+
 ##    facet_wrap(~treatment)
   
-##  samples2 = 
-##    samples %>% 
-##    dplyr::select(sample_label, starts_with("Fe")) %>% 
-##    pivot_longer(cols = starts_with("Fe"), names_to = "species", values_to = "ppm") %>% 
-##    left_join(moisture_processed) %>% 
-##    left_join(subsampling %>% dplyr::select(sample_label, iron_g) %>% drop_na()) %>% 
-##    rename(fm_g = iron_g) %>% 
-##    mutate(ppm = as.numeric(ppm),
-##           od_g = fm_g/((gwc_perc/100)+1),
-##           soilwater_g = fm_g - od_g,
-##           ug_g = ppm * ((25 + soilwater_g)/od_g),
-##           ug_g = round(ug_g, 2)) %>% 
-##    dplyr::select(sample_label, species, ppm, ug_g) %>% 
-##    arrange(sample_label) %>% 
-##    pivot_longer(-c(sample_label, species)) %>% 
-##    mutate(name = paste0(species, "_", name)) %>% 
-##    dplyr::select(-species) %>% 
-##    filter(!grepl("blank", sample_label)) %>% 
-##    pivot_wider() %>% 
-##    mutate(analysis = "Ferrozine") %>% 
-##    dplyr::select(sample_label, analysis, Fe_total_ug_g) %>% 
-##    rename(Fe_ugg = Fe_total_ug_g) %>% 
-##    filter(Fe_ugg >= 0)
+  samples2 = 
+    samples %>% 
+    rename(mgL = value) %>% 
+    mutate(analyte = str_remove(analyte, "_ppm")) %>% 
+    left_join(dry_weights) %>% 
+    mutate(ugg = mgL * (vol_water_mL/wt_dry_soil_g),
+           ugg = round(ugg, 2)) %>% 
+    dplyr::select(sample_label, analyte, mgL, ugg) %>% 
+    pivot_longer(-c(sample_label, analyte)) %>% 
+    mutate(name = paste0(analyte, "_", name)) %>% 
+    dplyr::select(-analyte) %>% 
+    filter(!grepl("blank", sample_label)) %>% 
+    pivot_wider() %>% 
+    mutate(analysis = "iron") %>% 
+    dplyr::select(sample_label, analysis, starts_with("Fe"))
   
-  samples
+  samples2
 }
 
 #
@@ -395,7 +377,6 @@ process_ions = function(ions_data){
 
   samples_corrected = 
     bind_rows(samples_nonSO4, samples_SO4) %>% 
-    mutate(analysis = "IC") %>% 
     dplyr::select(sample_label, analysis, ion, ppm_corrected) %>% 
     mutate(ion = tolower(ion),
            ion = paste0(ion, "_ppm")) %>% 
@@ -405,7 +386,24 @@ process_ions = function(ions_data){
                           "ammonium_ppm", "nitrate_ppm",
                           "sulfate_ppm", "phosphate_ppm"))
   
-  samples_corrected
+  
+  samples_corrected_ugg = 
+    samples_corrected %>% 
+    rename(mgL = value) %>% 
+    mutate(analyte = str_remove(analyte, "_ppm")) %>% 
+    left_join(dry_weights) %>% 
+    mutate(ugg = mgL * (vol_water_mL/wt_dry_soil_g),
+           ugg = round(ugg, 2)) %>% 
+    dplyr::select(sample_label, analyte, mgL, ugg) %>% 
+    pivot_longer(-c(sample_label, analyte)) %>% 
+    mutate(name = paste0(analyte, "_", name)) %>% 
+    dplyr::select(-analyte) %>% 
+    filter(!grepl("blank", sample_label)) %>% 
+    pivot_wider() %>% 
+    mutate(analysis = "IC") %>% 
+    dplyr::select(sample_label, analysis, ends_with("mgL"), ends_with("ugg"))
+  
+  samples_corrected_ugg
 }
 
 #
