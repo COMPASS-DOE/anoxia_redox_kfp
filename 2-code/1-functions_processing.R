@@ -119,8 +119,9 @@ process_weoc = function(weoc_data, sample_key, dry_weights){
     #  # join gwc and subsampling weights to normalize data to soil weight
     left_join(dry_weights) %>% 
     mutate(npoc_ugg = npoc_corr_mgL * (vol_water_mL/wt_dry_soil_g),
-           npoc_ugg = round(npoc_ugg, 2)) %>% 
-    dplyr::select(sample_label, npoc_corr_mgL, npoc_ugg) %>% 
+           npoc_ugg = round(npoc_ugg, 2),
+           analysis = "WEOC") %>% 
+    dplyr::select(sample_label, analysis, npoc_corr_mgL, npoc_ugg) %>% 
     force()
   
   weoc_processed
@@ -409,11 +410,11 @@ process_ions = function(ions_data, dry_weights){
 #
 # combined data -----------------------------------------------------------
 
-combine_data = function(iron_processed, ions_ic_processed, doc_processed, sample_key){
+combine_data = function(iron_processed, ions_ic_processed, weoc_processed, sample_key){
   
   combined = 
     bind_rows(
-      iron_processed, ions_ic_processed
+      iron_processed, ions_ic_processed, weoc_processed
     )
   
   combined
