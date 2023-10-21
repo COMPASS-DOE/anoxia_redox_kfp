@@ -98,7 +98,7 @@ import_weoc_data = function(FILEPATH){
     df}))
   
 }
-process_weoc = function(weoc_data, sample_key, dry_weight){
+process_weoc = function(weoc_data, sample_key, dry_weights){
   
   weoc_processed = 
     weoc_data %>% 
@@ -146,7 +146,7 @@ import_iron = function(FILEPATH = "1-data/microplate-iron"){
        ferrozine_data = ferrozine_data)
   
 }
-process_iron = function(ferrozine_map, ferrozine_data){
+process_iron = function(ferrozine_map, ferrozine_data, dry_weights){
   
   # clean the map
   map_processed = 
@@ -307,7 +307,7 @@ import_ions = function(FILEPATH){
   
   ions
 }
-process_ions = function(ions_data){
+process_ions = function(ions_data, dry_weights){
   
   ions = 
     ions_data %>% 
@@ -377,7 +377,7 @@ process_ions = function(ions_data){
 
   samples_corrected = 
     bind_rows(samples_nonSO4, samples_SO4) %>% 
-    dplyr::select(sample_label, analysis, ion, ppm_corrected) %>% 
+    dplyr::select(sample_label, ion, ppm_corrected) %>% 
     mutate(ion = tolower(ion),
            ion = paste0(ion, "_ppm")) %>% 
     rename(analyte = ion,

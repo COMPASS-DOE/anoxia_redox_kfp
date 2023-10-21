@@ -34,18 +34,18 @@ list(
   
   # TOC
   tar_target(weoc_data, import_weoc_data(FILEPATH = "1-data/raw_data/doc")),
-  tar_target(weoc_processed, process_weoc(weoc_data, sample_key)),
+  tar_target(weoc_processed, process_weoc(weoc_data, sample_key, dry_weights)),
   
   # Iron - ferrozine
   tar_target(ferrozine_map, import_iron(FILEPATH = "1-data/raw_data/microplate-iron")$ferrozine_map),
   tar_target(ferrozine_data, import_iron(FILEPATH = "1-data/raw_data/microplate-iron")$ferrozine_data),
-  tar_target(iron_processed, process_iron(ferrozine_map, ferrozine_data)),
+  tar_target(iron_processed, process_iron(ferrozine_map, ferrozine_data, dry_weights)),
   
   # Sulfide
   
   # IC ions
   tar_target(ions_data, import_ions(FILEPATH = "1-data/raw_data/ions")),
-  tar_target(ions_ic_processed, process_ions(ions_data)),
+  tar_target(ions_ic_processed, process_ions(ions_data, dry_weights)),
   
   # ORP-pH-DO
   tar_target(orp, googlesheets4::read_sheet("1xo-PzO0yxztvpFxlcaXbW5TEdAgz25ToN3R1qVORf8I")),
