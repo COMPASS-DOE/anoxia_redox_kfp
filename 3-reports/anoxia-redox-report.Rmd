@@ -1,0 +1,64 @@
+---
+title: ""
+output: 
+  github_document:
+  html_preview: true
+  
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE,
+                      warning = FALSE)
+```
+
+---
+
+How do nutrient limitations influence redox transformations?  
+Our objective is to better understand mechanistic controls on temporal progression of redox conditions.  
+Specifically, how does 
+(a) organic carbon (C)  or nutrient availability (N, S, P) and 
+(b) salinity influence time to anoxia and the progression of redox conditions? 
+
+
+We prepared mesocosms in 50-mL centrifuge tubes (10 g soil + filled with water) and incubated for various durations ranging from 1 hr to 2 weeks.
+At the end of the incubation, the mesocosms were opened in an anaerobic glovebox and sampled for various analyses (tracking transformations in redox sensitive elements). 
+
+Measure [NO3]/[NH4], [Fe2]/[Fe3], [SO4]/[HS], [CO2]/[CH4] in the water extracts to determine the time scale for the different redox reactions. 
+
+- dissolved ions (NH4, NO3, Ca, Mg, Na, Cl, SO4) 
+- dissolved organic carbon 
+- dissolved CO2 and CH4
+- extractable Fe2, Fe3
+
+all analyses were performed on the water "extract", except for Fe2/3, which was obtained using 0.5M HCl extractions on the soil pellet.
+
+---
+
+## Initial results
+```{r}
+tar_read(gg_optodes)
+```
+
+```{r}
+tar_read(gg_chemistry)
+```
+
+
+
+
+
+---
+
+## Session Info 
+
+<details>
+  <summary> Session Info </summary>
+
+Date run: `r Sys.Date()`
+
+```{r}
+sessionInfo()
+```
+
+</details>
