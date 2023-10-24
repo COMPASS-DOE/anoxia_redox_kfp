@@ -10,7 +10,7 @@
 
 
   
-make_optode_graphs = function(optode_processed, orp){
+make_optode_graphs = function(optode_processed, orp, sample_key){
   
   optode_processed = 
     optode_processed %>% 
@@ -65,7 +65,7 @@ make_optode_graphs = function(optode_processed, orp){
 }
 
 
-make_chemistry_graphs = function(combined_data, sample_key){
+make_chemistry_graphs = function(combined_data, orp, ghg_processed, sample_key){
   
   combined_key = 
     combined_data %>% 
@@ -86,101 +86,146 @@ make_chemistry_graphs = function(combined_data, sample_key){
     geom_point(size = 3, stroke = 1,
                position = position_dodge(width = 0.3))+
     scale_shape_manual(values = c(1, 16))+
-  #  facet_grid(analyte ~ location, scales = "free_y")+
+    #  facet_grid(analyte ~ location, scales = "free_y")+
     facet_wrap(~analyte + location, scales = "free_y")+
     labs(y = "mg/L")
   
   
-  
-  #  gg_iron = 
-  combined_key %>% 
-    filter(analysis == "iron") %>% 
+  # weoc
+  gg_weoc = 
+    combined_key %>% 
+    filter(analysis == "WEOC" & grepl("_ugg", analyte)) %>% 
     ggplot(aes(x = location, y = value, color = timepoint))+
     geom_point(size = 3,
                position = position_dodge(width = 0.2))+
     facet_grid(analyte ~ treatment)
   
+  # iron  
   iron = 
     combined_key %>% 
     filter(analysis == "iron") %>% 
     pivot_wider(names_from = "analyte", values_from = "value") %>% 
-    mutate(Fe23 = Fe2_ppm/Fe3_ppm)
+    mutate(Fe23 = Fe2_ugg/Fe3_ugg)
   
-  iron %>% 
+  gg_iron = 
+    combined_key %>% 
+    filter(analysis == "iron" & grepl("_ugg", analyte)) %>% 
+    ggplot(aes(x = location, y = value, color = timepoint))+
+    geom_point(size = 3,
+               position = position_dodge(width = 0.2))+
+    facet_grid(analyte ~ treatment)
+  
+  gg_iron_ratio = 
+    iron %>% 
     ggplot(aes(x = location, y = Fe23, color = timepoint))+
     geom_point(size = 3,
                position = position_dodge(width = 0.2))+
     facet_grid(. ~ treatment)+
     labs(y = "Fe2/Fe3")
-
-    
-  combined_key %>% 
-    filter(analyte %in% c("ammonium_ppm", "nitrate_ppm")) %>% 
+  
+  # DIN
+  nitrogen = 
+    combined_key %>% 
+    filter(analyte %in% c("ammonium_ugg", "nitrate_ugg")) %>% 
+    pivot_wider(names_from = "analyte", values_from = "value") %>% 
+    mutate(amm_nitr = ammonium_ugg/nitrate_ugg)
+  
+  gg_nitrogen = 
+    combined_key %>% 
+    filter(analyte %in% c("ammonium_ugg", "nitrate_ugg")) %>% 
     ggplot(aes(x = location, y = value, color = timepoint))+
     geom_point(size = 3,
                position = position_dodge(width = 0.2))+
     facet_grid(analyte ~ treatment, scales = "free_y")
   
-  nitrogen = 
-      combined_key %>% 
-      filter(analyte %in% c("ammonium_ppm", "nitrate_ppm")) %>% 
-      pivot_wider(names_from = "analyte", values_from = "value") %>% 
-      mutate(amm_nitr = ammonium_ppm/nitrate_ppm)
-    
-    
+  gg_nitrogen_ratio = 
     nitrogen %>% 
-      ggplot(aes(x = location, y = amm_nitr, color = timepoint))+
-      geom_point(size = 3,
-                 position = position_dodge(width = 0.2))+
-      facet_wrap(~treatment)+
-      labs(y = "ammonium/nitrate")
-
-    
-
-    
-    
-    orp_long = 
-      orp %>% 
-      dplyr::select(sample_label, orp_mV, pH, EC_mScm, DO_mgL) %>% 
-      pivot_longer(-sample_label) %>% 
-      left_join(sample_key) %>% 
-      mutate(value = as.numeric(value)) %>% 
-      reorder_factors() %>%  
-      drop_na()
-    
+    ggplot(aes(x = location, y = amm_nitr, color = timepoint))+
+    geom_point(size = 3,
+               position = position_dodge(width = 0.2))+
+    facet_wrap(~treatment)+
+    labs(y = "ammonium/nitrate")
+  
+  
+  # sulfur
+  sulfur = 
+    combined_key %>% 
+    filter(analyte %in% c("sulfate_ugg", "sulfide_ugg")) %>% 
+    dplyr::select(-analysis) %>% 
+    pivot_wider(names_from = "analyte", values_from = "value") %>% 
+    mutate(sulfide_sulfate = sulfide_ugg/sulfate_ugg)
+  
+  gg_sulfur =
+    combined_key %>% 
+    filter(analyte %in% c("sulfate_ugg", "sulfide_ugg")) %>% 
+    ggplot(aes(x = location, y = value, color = timepoint))+
+    geom_point(size = 3,
+               position = position_dodge(width = 0.2))+
+    facet_grid(analyte ~ treatment, scales = "free_y")
+  
+  gg_sulfur_ratio = 
+    sulfur %>% 
+    ggplot(aes(x = location, y = sulfide_sulfate, color = timepoint))+
+    geom_point(size = 3,
+               position = position_dodge(width = 0.2))+
+    facet_wrap(~treatment)+
+    labs(y = "sulfide/sulfate")
+  
+  # ORP
+  orp_long = 
+    orp %>% 
+    dplyr::select(sample_label, orp_mV, pH, EC_mScm, DO_mgL) %>% 
+    pivot_longer(-sample_label) %>% 
+    left_join(sample_key) %>% 
+    mutate(value = as.numeric(value)) %>% 
+    reorder_factors() %>%  
+    drop_na()
+  
+  gg_orp = 
     orp_long %>% 
-      ggplot(aes(x = location, y = value, color = timepoint))+
-      geom_point(size = 3, stroke = 1,
-                 position = position_dodge(width = 0.3))+
-      scale_shape_manual(values = c(1, 16))+
-      facet_grid(name~treatment, scales = "free_y")
-    
-    
-    ghg_processed = 
-      ghg %>% 
-      filter(!is.na(treatment)) %>% 
-      reorder_factors() 
-    
-    
+    ggplot(aes(x = location, y = value, color = timepoint))+
+    geom_point(size = 3, stroke = 1,
+               position = position_dodge(width = 0.3))+
+    scale_shape_manual(values = c(1, 16))+
+    facet_grid(name~treatment, scales = "free_y")
+  
+  # ghg
+  ghg_long = 
     ghg_processed %>% 
-      ggplot(aes(x = location, y = CO2_post/(CH4_post/1000), color = timepoint))+
-      geom_point(size = 3, stroke = 1,
-                 position = position_dodge(width = 0.3))+
-      scale_shape_manual(values = c(1, 16))+
-      facet_wrap(~treatment)+
-      labs(y = "CO2 ppm / CH4 ppm")
-    
-    ghg_long = 
-      ghg_processed %>% 
-      dplyr::select(sample_label, CO2_post, CH4_post) %>% 
-      pivot_longer(cols = -sample_label) %>% 
-      left_join(sample_key) %>% 
-      reorder_factors()
-    
+    dplyr::select(sample_label, CO2_ugg, CH4_ugg) %>% 
+    pivot_longer(cols = -sample_label) %>% 
+    left_join(sample_key) %>% 
+    reorder_factors()
+  
+  gg_ghg_ratio = 
+    ghg_processed %>% 
+    ggplot(aes(x = location, y = CO2_ugg/(CH4_ugg), color = timepoint))+
+    geom_point(size = 3, stroke = 1,
+               position = position_dodge(width = 0.3))+
+    scale_shape_manual(values = c(1, 16))+
+    facet_wrap(~treatment)+
+    labs(y = "CO2 ugg / CH4 ugg")
+  
+  gg_ghg = 
     ghg_long %>% 
-      ggplot(aes(x = location, y = value, color = timepoint))+
-      geom_point(size = 3, stroke = 1,
-                 position = position_dodge(width = 0.3))+
-      scale_shape_manual(values = c(1, 16))+
-      facet_grid(name ~ treatment, scales = "free_y")
-}
+    ggplot(aes(x = location, y = value, color = timepoint))+
+    geom_point(size = 3, stroke = 1,
+               position = position_dodge(width = 0.3))+
+    scale_shape_manual(values = c(1, 16))+
+    facet_grid(name ~ treatment, scales = "free_y")
+
+  
+  list(gg_weoc = gg_weoc,
+       gg_iron = gg_iron,
+       gg_iron_ratio = gg_iron_ratio,
+       gg_nitrogen = gg_nitrogen,
+       gg_nitrogen_ratio = gg_nitrogen_ratio,
+       gg_sulfur = gg_sulfur,
+       gg_sulfur_ratio = gg_sulfur_ratio,
+       gg_ghg = gg_ghg,
+       gg_ghg_ratio = gg_ghg_ratio,
+       gg_orp = gg_orp
+  )
+  
+  
+  }
