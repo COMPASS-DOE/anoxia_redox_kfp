@@ -270,7 +270,7 @@ process_iron = function(ferrozine_map, ferrozine_data, dry_weights){
     rename(mgL = value) %>% 
     mutate(analyte = str_remove(analyte, "_ppm")) %>% 
     left_join(dry_weights) %>% 
-    mutate(ugg = mgL * (vol_water_mL/wt_dry_soil_g),
+    mutate(ugg = mgL * (30/wt_dry_soil_g), # used 30 mL HCl for extraction 
            ugg = round(ugg, 2)) %>% 
     dplyr::select(sample_label, analyte, mgL, ugg) %>% 
     pivot_longer(-c(sample_label, analyte)) %>% 
