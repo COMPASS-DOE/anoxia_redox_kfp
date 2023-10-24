@@ -18,6 +18,7 @@ options(clustermq.scheduler = "multicore")
 source("2-code/0-packages.R")
 #source("2-code/0b-initial_processing.R")
 source("2-code/1-functions_processing.R")
+source("2-code/2-functions_analysis.R")
 
 # Replace the target list below with your own:
 list(
@@ -53,6 +54,13 @@ list(
   # ORP-pH-DO
   tar_target(orp, googlesheets4::read_sheet("1xo-PzO0yxztvpFxlcaXbW5TEdAgz25ToN3R1qVORf8I")),
   tar_target(ghg, googlesheets4::read_sheet("1uFvGIBwdrwK2nmvcpnkD9nubjlnLj973qr8qPuv7S7E")),
+  tar_target(ghg_processed, process_ghg(ghg, dry_weights)),
   
-  tar_target(combined_data, combine_data(iron_processed, ions_ic_processed, weoc_processed, sulfide_processed))
+  tar_target(combined_data, combine_data(iron_processed, ions_ic_processed, weoc_processed, sulfide_processed)),
+  
+  # graphs
+  tar_target(gg_optodes, make_optode_graphs(optode_processed, orp, sample_key)),
+  tar_target(gg_chemistry, make_chemistry_graphs(combined_data, orp, ghg_processed, sample_key)),
+  
+  tar_render(report, path = "3-reports/anoxia-redox-report.Rmd")
 )
