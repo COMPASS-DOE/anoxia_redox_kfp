@@ -537,6 +537,20 @@ process_ions = function(ions_data, dry_weights){
 }
 
 #
+# process GHG -------------------------------------------------------------
+
+process_ghg = function(ghg, dry_weights){
+  ghg_processed = 
+    ghg %>% 
+    filter(!is.na(treatment)) %>%
+    left_join(dry_weights) %>% 
+    mutate(CO2_ugg = CO2_post * vol_water_mL/wt_dry_soil_g,
+           CH4_ugg = (CH4_post/1000) * vol_water_mL/wt_dry_soil_g) %>% 
+    reorder_factors() 
+  
+}
+
+#
 # combined data -----------------------------------------------------------
 
 combine_data = function(iron_processed, ions_ic_processed, weoc_processed, sulfide_processed){
